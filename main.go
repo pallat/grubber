@@ -89,5 +89,5 @@ func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 func hash(s string) string {
 	h := sha1.New()
 	io.WriteString(h, s)
-	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+	return base64.RawURLEncoding.EncodeToString(h.Sum(nil))
 }
