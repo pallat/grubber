@@ -9,19 +9,49 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"sync"
 	"time"
+
+	"os"
+
+	"github.com/BurntSushi/toml"
 )
 
+var config struct{ Hosts []string }
+
 func main() {
+	_, err := toml.DecodeFile("ignore.toml", &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = os.Mkdir("cache", os.ModeDir|0755)
+	if err != nil {
+		if !os.IsExist(err) {
+			log.Fatal(err)
+		}
+	}
+
 	log.Fatal(http.ListenAndServe(":8080", http.HandlerFunc(ServeHTTP)))
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	save := r.Body
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
+
+	for _, ignore := range config.Hosts {
+		if r.RequestURI == ignore {
+			h := &httputil.ReverseProxy{
+				Director: func(r *http.Request) {
+				},
+				ModifyResponse: func(r *http.Response) error {
+					return nil
+				},
+			}
+			h.ServeHTTP(w, r)
+			log.Println("skip", ignore)
+			return
+		}
+	}
 
 	save, r.Body, err = drainBody(r.Body)
 	b, err := ioutil.ReadAll(r.Body)
@@ -41,7 +71,6 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.ServeHTTP(w, r)
-	mutex.Unlock()
 }
 
 func myReverseProxy(state string) *httputil.ReverseProxy {

@@ -1,0 +1,3 @@
+hosts = [
+  "http://gradius11:7429/CouponWs/SubscriberQueryCHNL"
+]
