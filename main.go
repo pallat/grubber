@@ -14,15 +14,10 @@ import (
 )
 
 func main() {
-	log.Fatal(http.ListenAndServe(":8080", &my{}))
+	log.Fatal(http.ListenAndServe(":8080", http.HandlerFunc(ServeHTTP)))
 }
 
-type my struct {
-	state string
-	h     http.Handler
-}
-
-func (m *my) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	save := r.Body
 	var mutex = &sync.Mutex{}
@@ -35,17 +30,17 @@ func (m *my) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = save
 
-	m.state = string(b)
-	m.h = myReverseProxy(m.state)
+	state := string(b)
+	h := myReverseProxy(state)
 
-	b, err = ioutil.ReadFile("cache/" + hash(m.state))
+	b, err = ioutil.ReadFile("cache/" + hash(state))
 	if err == nil {
 		w.Write(b)
 		log.Println("buffer")
 		return
 	}
 
-	m.h.ServeHTTP(w, r)
+	h.ServeHTTP(w, r)
 	mutex.Unlock()
 }
 
