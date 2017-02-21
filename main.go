@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"sync"
+	"time"
 )
 
 func main() {
@@ -23,6 +25,8 @@ type my struct {
 func (m *my) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	save := r.Body
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
 
 	save, r.Body, err = drainBody(r.Body)
 	b, err := ioutil.ReadAll(r.Body)
@@ -30,11 +34,26 @@ func (m *my) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	r.Body = save
-	m.state = string(b)
 
-	m.h = &httputil.ReverseProxy{
+	m.state = string(b)
+	m.h = myReverseProxy(m.state)
+
+	b, err = ioutil.ReadFile("cache/" + hash(m.state))
+	if err == nil {
+		w.Write(b)
+		log.Println("buffer")
+		return
+	}
+
+	m.h.ServeHTTP(w, r)
+	mutex.Unlock()
+}
+
+func myReverseProxy(state string) *httputil.ReverseProxy {
+	return &httputil.ReverseProxy{
 		Director: func(r *http.Request) {
 		},
+		FlushInterval: 1 * time.Second,
 		ModifyResponse: func(r *http.Response) error {
 			var err error
 			save := r.Body
@@ -51,7 +70,7 @@ func (m *my) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			r.Body = save
 
-			err = ioutil.WriteFile(hash(m.state), b, 0644)
+			err = ioutil.WriteFile("cache/"+hash(state), b, 0644)
 			if err != nil {
 				log.Println(err)
 			}
@@ -60,15 +79,6 @@ func (m *my) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return nil
 		},
 	}
-
-	b, err = ioutil.ReadFile(hash(m.state))
-	if err == nil {
-		w.Write(b)
-		log.Println("buffer")
-		return
-	}
-
-	m.h.ServeHTTP(w, r)
 }
 
 func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
