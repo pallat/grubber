@@ -16,7 +16,12 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-var config struct{ Hosts []string }
+var config struct {
+	Ignores []string `toml:"ignores"`
+	Match   struct {
+		URI []string `toml:"uri"`
+	} `toml:"match"`
+}
 
 func main() {
 	_, err := toml.DecodeFile("ignore.toml", &config)
@@ -38,7 +43,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	save := r.Body
 
-	for _, ignore := range config.Hosts {
+	for _, ignore := range config.Ignores {
 		if r.RequestURI == ignore {
 			h := &httputil.ReverseProxy{
 				Director: func(r *http.Request) {
@@ -61,6 +66,13 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.Body = save
 
 	state := string(b)
+
+	for _, match := range config.Match.URI {
+		if match == r.RequestURI {
+			state = r.RequestURI
+		}
+	}
+
 	h := myReverseProxy(state)
 
 	b, err = ioutil.ReadFile("cache/" + hash(state))

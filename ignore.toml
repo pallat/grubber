@@ -1,3 +1,8 @@
-hosts = [
-  "http://gradius11:7429/CouponWs/SubscriberQueryCHNL"
+ignores = [
+    # "http://gradius11:7429/CouponWs/SubscriberQueryCHNL"
 ]
+
+[match]
+    uri = [
+        "http://gradius11:7429/CouponWs/SubscriberQueryCHNL"
+    ]
