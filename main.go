@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,8 +14,12 @@ import (
 
 	"os"
 
+	"flag"
+
 	"github.com/BurntSushi/toml"
 )
+
+var port string
 
 var config struct {
 	Ignores []string `toml:"ignores"`
@@ -23,7 +28,13 @@ var config struct {
 	} `toml:"match"`
 }
 
+func init() {
+	flag.StringVar(&port, "port", ":8080", "-port=:8080")
+}
+
 func main() {
+	flag.Parse()
+
 	_, err := toml.DecodeFile("ignore.toml", &config)
 	if err != nil {
 		log.Fatal(err)
@@ -36,7 +47,8 @@ func main() {
 		}
 	}
 
-	log.Fatal(http.ListenAndServe(":8080", http.HandlerFunc(ServeHTTP)))
+	fmt.Println("omr api proxy active", port)
+	log.Fatal(http.ListenAndServe(port, http.HandlerFunc(ServeHTTP)))
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
