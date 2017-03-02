@@ -18,6 +18,8 @@ import (
 )
 
 var port string
+var logger *log.Logger
+var f *os.File
 
 var config struct {
 	Ignores []string `toml:"ignores"`
@@ -27,11 +29,18 @@ var config struct {
 }
 
 func init() {
+	var err error
+	f, err = os.OpenFile("trace.log", os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logger = log.New(f, "logger: ", log.Lshortfile)
 	flag.StringVar(&port, "port", ":8080", "-port=:8080")
 }
 
 func main() {
 	flag.Parse()
+	defer f.Close()
 
 	_, err := toml.DecodeFile("config.toml", &config)
 	if err != nil {
@@ -51,6 +60,7 @@ func main() {
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
+	stateis := "body"
 
 	save := r.Body
 	for _, ignore := range config.Ignores {
@@ -80,6 +90,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, match := range config.Match.URI {
 		if match == r.RequestURI {
 			state = r.RequestURI
+			stateis = "uri"
 		}
 	}
 
@@ -91,6 +102,8 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println("buffer")
 		return
 	}
+
+	logger.Println("state:", stateis, "uri:", r.RequestURI, "hash:", hash(state))
 
 	h.ServeHTTP(w, r)
 }
