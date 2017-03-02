@@ -4,5 +4,7 @@ ignores = [
 
 [match]
     uri = [
-        "http://gradius11:7429/CouponWs/SubscriberQueryCHNL"
+        "http://gradius11:7429/CouponWs/SubscriberQueryCHNL",
+        "emailsvc-test.dtac.co.th:443",
+        "http://emailsvc-test.dtac.co.th/einvws/EINVHistoryService"
     ]

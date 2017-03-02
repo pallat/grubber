@@ -4,17 +4,15 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"time"
-
 	"os"
-
-	"flag"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
@@ -53,8 +51,8 @@ func main() {
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
-	save := r.Body
 
+	save := r.Body
 	for _, ignore := range config.Ignores {
 		if r.RequestURI == ignore {
 			h := &httputil.ReverseProxy{
