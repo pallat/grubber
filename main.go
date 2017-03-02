@@ -35,7 +35,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	_, err := toml.DecodeFile("ignore.toml", &config)
+	_, err := toml.DecodeFile("config.toml", &config)
 	if err != nil {
 		log.Fatal(err)
 	}
