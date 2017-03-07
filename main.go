@@ -85,7 +85,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	state := string(b)
 
-	for _, match := range config.Match.URI {
+	for _, match := range config.Match {
 		if match == r.RequestURI {
 			state = r.RequestURI
 			stateis = "uri"
