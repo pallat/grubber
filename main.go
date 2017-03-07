@@ -23,9 +23,7 @@ var f *os.File
 
 var config struct {
 	Ignores []string `toml:"ignores"`
-	Match   struct {
-		URI []string `toml:"uri"`
-	} `toml:"match"`
+	Match   []string `toml:"match"`
 }
 
 func init() {
