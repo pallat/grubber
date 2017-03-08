@@ -32,7 +32,7 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	logger = log.New(f, "logger: ", log.Lshortfile)
+	logger = log.New(f, "logger: ", log.Ldate|log.Ltime|log.Lmicroseconds)
 	flag.StringVar(&port, "port", ":8080", "-port=:8080")
 }
 
@@ -71,7 +71,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				},
 			}
 			h.ServeHTTP(w, r)
-			log.Println("skip", ignore)
+			logger.Println("skip:", ignore)
 			return
 		}
 	}
@@ -79,7 +79,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	save, r.Body, err = drainBody(r.Body)
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		logger.Println(err)
 	}
 	r.Body = save
 
@@ -97,7 +97,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	b, err = ioutil.ReadFile("cache/" + hash(state))
 	if err == nil {
 		w.Write(b)
-		log.Println("buffer")
+		logger.Println("cache:", stateis, "uri:", r.RequestURI, "hash:", hash(state))
 		return
 	}
 
@@ -116,23 +116,22 @@ func myReverseProxy(state string) *httputil.ReverseProxy {
 			save := r.Body
 
 			if r.StatusCode > 299 {
-				log.Println("error status", r.Status)
+				logger.Println("error status", r.Status)
 				return nil
 			}
 
 			save, r.Body, err = drainBody(r.Body)
 			b, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				log.Println(err)
+				logger.Println(err)
 			}
 			r.Body = save
 
 			err = ioutil.WriteFile("cache/"+hash(state), b, 0644)
 			if err != nil {
-				log.Println(err)
+				logger.Println(err)
 			}
 
-			log.Println("saved")
 			return nil
 		},
 	}
