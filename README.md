@@ -1,7 +1,9 @@
-How to Buld
+How to Build
 -----------
+~~~
 ./build
 mv main stub
+~~~
 
 ## remote to **andromeda11 & andromeda12** and kill stub process
 `pkill stub`
