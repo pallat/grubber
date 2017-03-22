@@ -7,5 +7,5 @@ match = [
 ]
 
 timeout = [
-    "http://10.89.74.54/NS.SSO.LDAP/LDAPAuthen.asmx"
+    "http://slow.com"
 ]
