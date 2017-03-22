@@ -24,6 +24,7 @@ var f *os.File
 var config struct {
 	Ignores []string `toml:"ignores"`
 	Match   []string `toml:"match"`
+	Timeout []string `toml:"timeout"`
 }
 
 func init() {
@@ -73,6 +74,21 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 			logger.Println("skip:", ignore)
 			return
+		}
+	}
+
+	for _, timeo := range config.Timeout {
+		if r.RequestURI == timeo {
+			h := &httputil.ReverseProxy{
+				Director: func(r *http.Request) {
+				},
+				ModifyResponse: func(r *http.Response) error {
+					return nil
+				},
+			}
+			time.Sleep(3 * time.Minute)
+			h.ServeHTTP(w, r)
+			logger.Println("timeout:", timeo)
 		}
 	}
 
