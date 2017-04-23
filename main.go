@@ -27,6 +27,7 @@ var config struct {
 	Timeout []string `toml:"timeout"`
 }
 
+
 func init() {
 	var err error
 	f, err = os.OpenFile("trace.log", os.O_RDWR|os.O_CREATE, 0644)
